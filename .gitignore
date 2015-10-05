@@ -1,0 +1,8 @@
+out/
+
+# OS X Specific
+.DS_Store
+
+# IntelliJ Specific
+*.iml
+.idea/
