@@ -1,8 +1,6 @@
 package pacman.game;
 
-import java.util.BitSet;
-import java.util.EnumMap;
-import java.util.Random;
+import java.util.*;
 import java.util.Map.Entry;
 import pacman.game.Constants.DM;
 import pacman.game.Constants.MOVE;
@@ -1423,6 +1421,40 @@ public final class Game
 		
 		return move;
 	}
+
+    public MOVE getNextMoveTowardsTargetBFS(int fromNodeIndex,int toNodeIndex,DM distanceMeasure)
+    {
+        MOVE move=null;
+        double minDistance = Integer.MAX_VALUE;
+
+        LinkedList<Node> frontier = new LinkedList<Node>();
+        HashSet<Integer> explored = new HashSet<Integer>();
+        frontier.add(currentMaze.graph[fromNodeIndex]);
+
+        while(frontier.size() > 0){
+            Node currentNode = frontier.pop();
+
+            if(!explored.contains(currentNode.nodeIndex)){
+                EnumMap<MOVE, Integer> neighbors = currentNode.neighbourhood;
+
+                for( Entry<MOVE, Integer> entry : neighbors.entrySet() ){
+                    if(!frontier.contains(currentMaze.graph[entry.getValue()]) && !explored.contains(entry.getValue())){
+                        double distance = getDistance(entry.getValue(),toNodeIndex,distanceMeasure);
+
+                        if(distance < minDistance){
+                            minDistance = distance;
+                            move = entry.getKey();
+                        }
+
+                        frontier.add(currentMaze.graph[entry.getValue()]);
+                        explored.add(entry.getValue());
+                    }
+                }
+            }
+        }
+
+        return move;
+    }
 	
 	/**
 	 * Gets the next move away from target.
