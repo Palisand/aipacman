@@ -36,11 +36,14 @@ public class Executor
 	{
 		Executor exec=new Executor();
 
-		/*
+
 		//run multiple games in batch mode - good for testing.
-		int numTrials=10;
-		exec.runExperiment(new RandomPacMan(),new RandomGhosts(),numTrials);
-		 */
+		int numTrials=100;
+		exec.runExperiment(new NearestPillDFS(), new AggressiveGhosts(),numTrials);
+		// BFS
+		// 2768.2, 2735.7, 2620.2
+        // DFS
+        // 2605.0, 2738.3, 2693.6
 		
 		/*
 		//run a game in synchronous mode: game waits until controllers respond.
@@ -51,9 +54,9 @@ public class Executor
 		
 		///*
 		//run the game in asynchronous mode.
-		boolean visual=true;
+//		boolean visual=true;
 //		exec.runGameTimed(new NearestPillPacMan(),new AggressiveGhosts(),visual);
-		exec.runGameTimed(new NearestPillBFS(),new AggressiveGhosts(),visual);
+//		exec.runGameTimed(new NearestPillBFS(),new AggressiveGhosts(),visual);
 //		exec.runGameTimed(new HumanController(new KeyBoardInput()),new StarterGhosts(),visual);	
 		//*/
 		
