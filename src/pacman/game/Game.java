@@ -1455,6 +1455,40 @@ public final class Game
 
         return move;
     }
+
+	public MOVE getNextMoveTowardsTargetDFS(int fromNodeIndex, int toNodeIndex, DM distanceMeasure)
+	{
+		MOVE move = null;
+		double minDistance=Integer.MAX_VALUE;
+		Stack<Entry<MOVE, Integer>> stack = new Stack<>();
+		Entry<MOVE, Integer> fromNodeEntry = new AbstractMap.SimpleEntry<>(null, fromNodeIndex);
+		Set<Integer> visited = new HashSet<>();  // empty, none visited
+		stack.push(fromNodeEntry);
+
+		while (!stack.isEmpty()) {
+			Entry<MOVE, Integer> nodeEntry = stack.pop();
+
+			if (!visited.contains(nodeEntry.getValue())) {  // if nodeEntry has not been visited
+				visited.add(nodeEntry.getValue());
+
+				// update distance
+				double distance=getDistance(nodeEntry.getValue(), toNodeIndex, distanceMeasure);
+				if(distance<minDistance) {
+					minDistance=distance;
+					move=nodeEntry.getKey();
+				}
+
+				// for each unvisited neighbour
+				for (Entry<MOVE,Integer> entry : currentMaze.graph[fromNodeIndex].neighbourhood.entrySet()) {
+					if (!visited.contains(entry.getValue())) {
+						stack.push(entry);
+					}
+				}
+			}
+		}
+
+		return move;
+	}
 	
 	/**
 	 * Gets the next move away from target.
