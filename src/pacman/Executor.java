@@ -38,17 +38,12 @@ public class Executor
 
 		//run multiple games in batch mode - good for testing.
 		//int numTrials=100;
-		//exec.runExperiment(new NearestPillDFS(), new AggressiveGhosts(),numTrials);
-		// BFS
-		// 2768.2, 2735.7, 2620.2
-        // DFS
-        // 2605.0, 2738.3, 2693.6
-		
+		//exec.runExperiment(new OurAStar(new AggressiveGhosts()), new AggressiveGhosts(),numTrials);
 
 		//run a game in synchronous mode: game waits until controllers respond.
-        int delay=10;
+        int delay=20;
 		boolean visual=true;
-		exec.runGame(new BreadthFirstSearch( new AggressiveGhosts()), new AggressiveGhosts(),visual,delay);
+		exec.runGame(new OurAStar( new AggressiveGhosts() ), new AggressiveGhosts(),visual,delay);
 
 		
 		///*

@@ -6,12 +6,8 @@ import pacman.game.Game;
 
 import java.util.*;
 
-import static pacman.game.Constants.DM;
 import static pacman.game.Constants.MOVE;
 
-/*
- * The Class NearestPillBFS.
- */
 public class DepthFirstSearch extends Controller<MOVE> {
 
     /* (non-Javadoc)
@@ -28,9 +24,7 @@ public class DepthFirstSearch extends Controller<MOVE> {
         HashMap<Integer, LinkedList<MOVE>> paths = new HashMap<Integer, LinkedList<MOVE>>();
         HashSet<Integer> explored = new HashSet<Integer>();
         int maxScore = game.getScore();
-
         nextMove = dfsRecursive(game, paths, explored, maxScore);
-        System.out.println(nextMove);
         return nextMove;
     }
 
@@ -49,7 +43,7 @@ public class DepthFirstSearch extends Controller<MOVE> {
         }
         LinkedList<MOVE> pathSoFar = paths.get(currentGame.getPacmanCurrentNodeIndex());
 
-        for (MOVE move : currentGame.getPossibleMoves(currentGame.getPacmanCurrentNodeIndex())) {
+        for (MOVE move : currentGame.getPossibleMoves(currentGame.getPacmanCurrentNodeIndex(), currentGame.getPacmanLastMoveMade())) {
             Game copy = currentGame.copy();
             copy.advanceGame(move, ghostController.getMove(copy, -1));
 
@@ -62,6 +56,6 @@ public class DepthFirstSearch extends Controller<MOVE> {
                 return dfsRecursive(copy, paths, explored, maxScore);
             }
         }
-        return null;
+        return MOVE.NEUTRAL;
     }
 }

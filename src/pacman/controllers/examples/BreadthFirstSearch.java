@@ -52,7 +52,7 @@ public class BreadthFirstSearch extends Controller<MOVE> {
             LinkedList<MOVE> pathSoFar = paths.get(currentGame.getPacmanCurrentNodeIndex());
 
             if(!explored.contains(currentGame.getPacmanCurrentNodeIndex())) {
-                for(MOVE move : currentGame.getPossibleMoves(currentGame.getPacmanCurrentNodeIndex())){
+                for(MOVE move : currentGame.getPossibleMoves(currentGame.getPacmanCurrentNodeIndex(), currentGame.getPacmanLastMoveMade())){
                     Game copy = currentGame.copy();
                     copy.advanceGame(move, ghostController.getMove(copy, -1));
                     if(!paths.containsKey(copy.getPacmanCurrentNodeIndex())){
