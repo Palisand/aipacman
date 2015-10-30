@@ -75,11 +75,10 @@ public class OurAStar extends Controller<MOVE> {
             if( currentGame.getScore() > maxScore ){
                 nextMove = paths.get(currentGame.getPacmanCurrentNodeIndex()).poll();
                 routeFound = true;
-                break;
             }
 
             closedSet.add(currentGame.getPacmanCurrentNodeIndex());
-            for(MOVE move : currentGame.getPossibleMoves(currentGame.getPacmanCurrentNodeIndex(), currentGame.getPacmanLastMoveMade())) {
+            for(MOVE move : currentGame.getPossibleMoves(currentGame.getPacmanCurrentNodeIndex())) {
                 Game copy = currentGame.copy();
                 copy.advanceGame(move, ghostController.getMove(copy, -1));
 
@@ -91,7 +90,9 @@ public class OurAStar extends Controller<MOVE> {
 
                 if(!openSet.contains(copy.getPacmanCurrentNodeIndex())){
                     openSet.add(copy.getPacmanCurrentNodeIndex());
-                    frontier.add(copy);
+                    if(!bfsIsDangerAhead(copy)){
+                        frontier.add(copy);
+                    }
                 } else if (tentativeGScore >= gScore.get(copy.getPacmanCurrentNodeIndex())){
                     continue;
                 }
@@ -119,5 +120,27 @@ public class OurAStar extends Controller<MOVE> {
 
             return (int) (o1Score - o2Score);
         }
+    }
+
+    public boolean bfsIsDangerAhead( Game game ){
+        boolean danger = false;
+        int i = 5;
+        int lives = game.getPacmanNumberOfLivesRemaining();
+        for(MOVE secondaryMove : game.getPossibleMoves(game.getPacmanCurrentNodeIndex(), game.getPacmanLastMoveMade())) {
+            Game copy = game.copy();
+            while( i > 0 ){
+                copy.advanceGame(secondaryMove, ghostController.getMove(copy, -1));
+                i--;
+                if (copy.getPacmanNumberOfLivesRemaining() < lives) {
+                    danger = true;
+                    break;
+                }
+            }
+            if(danger){
+                break;
+            }
+        }
+
+        return danger;
     }
 }

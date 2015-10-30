@@ -52,14 +52,16 @@ public class BreadthFirstSearch extends Controller<MOVE> {
             LinkedList<MOVE> pathSoFar = paths.get(currentGame.getPacmanCurrentNodeIndex());
 
             if(!explored.contains(currentGame.getPacmanCurrentNodeIndex())) {
-                for(MOVE move : currentGame.getPossibleMoves(currentGame.getPacmanCurrentNodeIndex(), currentGame.getPacmanLastMoveMade())){
+                for(MOVE move : currentGame.getPossibleMoves(currentGame.getPacmanCurrentNodeIndex())){
                     Game copy = currentGame.copy();
                     copy.advanceGame(move, ghostController.getMove(copy, -1));
                     if(!paths.containsKey(copy.getPacmanCurrentNodeIndex())){
                         paths.put(copy.getPacmanCurrentNodeIndex(), (LinkedList<MOVE>) pathSoFar.clone());
                     }
                     paths.get(copy.getPacmanCurrentNodeIndex()).add(move);
-                    frontier.add(copy);
+                    if(!bfsIsDangerAhead(copy)){
+                        frontier.add(copy);
+                    }
                     int currentScore = copy.getScore();
                     if ((currentScore > maxScore)) {
                         nextMove = paths.get(copy.getPacmanCurrentNodeIndex()).poll();
@@ -71,5 +73,27 @@ public class BreadthFirstSearch extends Controller<MOVE> {
             }
         }
         return nextMove;
+    }
+
+    public boolean bfsIsDangerAhead( Game game ){
+        boolean danger = false;
+        int i = 3;
+        int lives = game.getPacmanNumberOfLivesRemaining();
+        for(MOVE secondaryMove : game.getPossibleMoves(game.getPacmanCurrentNodeIndex(), game.getPacmanLastMoveMade())) {
+            Game copy = game.copy();
+            while( i > 0 ){
+                copy.advanceGame(secondaryMove, ghostController.getMove(copy, -1));
+                i--;
+                if (copy.getPacmanNumberOfLivesRemaining() < lives) {
+                    danger = true;
+                    break;
+                }
+            }
+            if(danger){
+                break;
+            }
+        }
+
+        return danger;
     }
 }
