@@ -53,15 +53,13 @@ public class SimulatedAnnealing extends Controller<MOVE> {
                 temperature = START_TEMP;
                 return current.getPacmanLastMoveMade();
             }
-            MOVE[] moves = game.getPossibleMoves(game.getPacmanCurrentNodeIndex());
+            MOVE[] moves = game.getPossibleMoves(game.getPacmanCurrentNodeIndex(), game.getPacmanLastMoveMade());
             MOVE selected = moves[random.nextInt(moves.length)];
             Game next = game.copy();
             next.advanceGame(selected, ghostController.getMove(next, -1));
             evalChange = getEvalChange(game, next);
             if (evalChange > 0) {
                 current = next;
-//                temperature = START_TEMP;
-//                return current.getPacmanLastMoveMade();
             }
             else {
                 probability = Math.exp(evalChange / temperature);  // e^(∆E/T)
