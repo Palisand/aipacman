@@ -10,13 +10,10 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-/**
- * Created by Sam on 10/28/2015.
- */
 public class HillClimber extends Controller<MOVE> {
 
     Controller<EnumMap<Constants.GHOST, MOVE>> ghostController;
-    int nearestTargetIndex;
+    static int nearestTargetIndex;
 
     public HillClimber(Controller<EnumMap<Constants.GHOST, MOVE>> ghostController){
         this.ghostController = ghostController;
@@ -27,7 +24,7 @@ public class HillClimber extends Controller<MOVE> {
         return hillClimbMove(game, ghostController);
     }
 
-    public int getNearestTargetIndex( Game game){
+    static public int getNearestTargetIndex( Game game){
         int currentPacManIndex=game.getPacmanCurrentNodeIndex();
         int[] activePills=game.getActivePillsIndices();
         int[] activePowerPills=game.getActivePowerPillsIndices();
@@ -44,7 +41,7 @@ public class HillClimber extends Controller<MOVE> {
         return game.getClosestNodeIndexFromNodeIndex(currentPacManIndex, targetNodeIndices, Constants.DM.EUCLID);
     }
 
-    public double getStraightLineDistance( Game game ){
+    static public double getStraightLineDistance( Game game ){
         int currentPacManIndex = game.getPacmanCurrentNodeIndex();
         double straightLineDistance = game.getDistance(currentPacManIndex, nearestTargetIndex, Constants.DM.EUCLID);
 
@@ -55,7 +52,7 @@ public class HillClimber extends Controller<MOVE> {
 
         if ( currentMaxScore < game.getScore() ){
             return 20;
-        } else if( game.getPacmanNumberOfLivesRemaining() < currentLives){
+        } else if ( game.getPacmanNumberOfLivesRemaining() < currentLives){
             return Integer.MIN_VALUE;
         } else if ( currentStraightLineDistance > getStraightLineDistance( game ) ){
             return 10;
