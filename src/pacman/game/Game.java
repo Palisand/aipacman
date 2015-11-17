@@ -39,7 +39,8 @@ public final class Game
 	//pills stored as bitsets for efficient copying
 	private BitSet pills, powerPills;
 	//all the game's variables
-	private int mazeIndex, levelCount, currentLevelTime, totalTime, score, ghostEatMultiplier, timeOfLastGlobalReversal;	
+	private int mazeIndex, levelCount, currentLevelTime, totalTime, score, ghostEatMultiplier, timeOfLastGlobalReversal;
+    private long longScore;
 	private boolean gameOver, pacmanWasEaten, pillWasEaten, powerPillWasEaten;
 	private EnumMap<GHOST,Boolean> ghostsEaten;
 	//the data relating to pacman and the ghosts are stored in respective data structures for clarity
@@ -118,6 +119,7 @@ public final class Game
 	{
 		mazeIndex=initialMaze;
 		score=currentLevelTime=levelCount=totalTime=0;
+        longScore = 0;
 		ghostEatMultiplier=1;
 		gameOver=false;
 		timeOfLastGlobalReversal=-1;		
@@ -256,6 +258,7 @@ public final class Game
 		mazeIndex=Integer.parseInt(values[index++]);
 		totalTime=Integer.parseInt(values[index++]);
 		score=Integer.parseInt(values[index++]);
+        longScore=Long.parseLong(values[index++]);
 		currentLevelTime=Integer.parseInt(values[index++]);
 		levelCount=Integer.parseInt(values[index++]);
 		
@@ -316,6 +319,7 @@ public final class Game
 		copy.currentLevelTime=currentLevelTime;		
 		copy.totalTime=totalTime;
 		copy.score=score;
+        copy.longScore=longScore;
 		copy.ghostEatMultiplier=ghostEatMultiplier;
 		copy.gameOver=gameOver;
 		copy.timeOfLastGlobalReversal=timeOfLastGlobalReversal;		
@@ -473,7 +477,7 @@ public final class Game
 	 */
 	private void _updatePacManExtraLife()
 	{
-		if(!pacman.hasReceivedExtraLife && score>=EXTRA_LIFE_SCORE)	//award 1 extra life at 10000 points
+		if(!pacman.hasReceivedExtraLife && score>=EXTRA_LIFE_SCORE && longScore>=EXTRA_LIFE_SCORE)	//award 1 extra life at 10000 points
 		{
 			pacman.hasReceivedExtraLife=true;
 			pacman.numberOfLivesRemaining++;
@@ -596,6 +600,7 @@ public final class Game
 		if(pillIndex>=0 && pills.get(pillIndex))
 		{
 			score+=PILL;
+            longScore+=(long)PILL;
 			pills.clear(pillIndex);
 			pillWasEaten=true;
 		}
@@ -613,6 +618,7 @@ public final class Game
 		if(powerPillIndex>=0 && powerPills.get(powerPillIndex))
 		{
 			score+=POWER_PILL;
+            longScore+=(long)POWER_PILL;
 			ghostEatMultiplier=1;
 			powerPills.clear(powerPillIndex);
 			
@@ -674,6 +680,7 @@ public final class Game
 				if(ghost.edibleTime>0)									//pac-man eats ghost
 				{
 					score+=GHOST_EAT_SCORE*ghostEatMultiplier;
+                    longScore+=(long)GHOST_EAT_SCORE*ghostEatMultiplier;
 					ghostEatMultiplier*=2;
 					ghost.edibleTime=0;					
 					ghost.lairTime=(int)(COMMON_LAIR_TIME*(Math.pow(LAIR_REDUCTION,levelCount%LEVEL_RESET_REDUCTION)));					
@@ -712,6 +719,7 @@ public final class Game
 		{
 			gameOver=true;
 			score+=pacman.numberOfLivesRemaining*AWARD_LIFE_LEFT;
+            longScore+=(long)pacman.numberOfLivesRemaining*AWARD_LIFE_LEFT;
 		}
 		//if all pills have been eaten or the time is up...
 		else if((pills.isEmpty() && powerPills.isEmpty()) || currentLevelTime>=LEVEL_LIMIT)
@@ -1036,6 +1044,11 @@ public final class Game
 	{
 		return score;
 	}
+
+    public long getLongScore()
+    {
+        return longScore;
+    }
 	
 	/**
 	 * Returns the time of the current level (important with respect to LEVEL_LIMIT).
