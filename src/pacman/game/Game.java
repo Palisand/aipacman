@@ -119,7 +119,7 @@ public final class Game
 	{
 		mazeIndex=initialMaze;
 		score=currentLevelTime=levelCount=totalTime=0;
-        longScore = 0;
+        longScore = 0l;
 		ghostEatMultiplier=1;
 		gameOver=false;
 		timeOfLastGlobalReversal=-1;		
@@ -204,7 +204,7 @@ public final class Game
 	{
 		StringBuilder sb=new StringBuilder();
 
-		sb.append(mazeIndex+","+totalTime+","+score+","+currentLevelTime+","+levelCount+","
+		sb.append(mazeIndex+","+totalTime+","+score+","+longScore+","+currentLevelTime+","+levelCount+","
 				+pacman.currentNodeIndex+","+pacman.lastMoveMade+","+pacman.numberOfLivesRemaining+","+pacman.hasReceivedExtraLife+",");
 
 		for(Ghost ghost : ghosts.values())
@@ -600,7 +600,7 @@ public final class Game
 		if(pillIndex>=0 && pills.get(pillIndex))
 		{
 			score+=PILL;
-            longScore+=(long)PILL;
+            longScore+= PILL;
 			pills.clear(pillIndex);
 			pillWasEaten=true;
 		}
@@ -618,7 +618,7 @@ public final class Game
 		if(powerPillIndex>=0 && powerPills.get(powerPillIndex))
 		{
 			score+=POWER_PILL;
-            longScore+=(long)POWER_PILL;
+            longScore+=POWER_PILL;
 			ghostEatMultiplier=1;
 			powerPills.clear(powerPillIndex);
 			
@@ -680,7 +680,7 @@ public final class Game
 				if(ghost.edibleTime>0)									//pac-man eats ghost
 				{
 					score+=GHOST_EAT_SCORE*ghostEatMultiplier;
-                    longScore+=(long)GHOST_EAT_SCORE*ghostEatMultiplier;
+                    longScore+=GHOST_EAT_SCORE*ghostEatMultiplier;
 					ghostEatMultiplier*=2;
 					ghost.edibleTime=0;					
 					ghost.lairTime=(int)(COMMON_LAIR_TIME*(Math.pow(LAIR_REDUCTION,levelCount%LEVEL_RESET_REDUCTION)));					
@@ -719,7 +719,8 @@ public final class Game
 		{
 			gameOver=true;
 			score+=pacman.numberOfLivesRemaining*AWARD_LIFE_LEFT;
-            longScore+=(long)pacman.numberOfLivesRemaining*AWARD_LIFE_LEFT;
+            //longScore+=pacman.numberOfLivesRemaining*AWARD_LIFE_LEFT;
+            //System.out.println(pacman.numberOfLivesRemaining*AWARD_LIFE_LEFT);
 		}
 		//if all pills have been eaten or the time is up...
 		else if((pills.isEmpty() && powerPills.isEmpty()) || currentLevelTime>=LEVEL_LIMIT)
