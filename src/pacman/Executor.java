@@ -42,10 +42,10 @@ public class Executor
         //exec.runExperiment(new HillClimber(new AggressiveGhosts()), new AggressiveGhosts(),numTrials);
 
         //run a game in synchronous mode: game waits until controllers respond.
-        int delay=0;
-        boolean visual=false;
+        int delay=10;
+        boolean visual=true;
         //exec.runGame(new OurAStar( new AggressiveGhosts() ), new AggressiveGhosts(),visual,delay);
-        exec.runGameEvolutionary(new OurAStar( new AggressiveGhosts() ), new AggressiveGhosts());
+        exec.runGame(new EvolutionStrategy( new AggressiveGhosts() ), new AggressiveGhosts(),visual,delay);
 
 
         ///*
@@ -131,8 +131,6 @@ public class Executor
         while(!game.gameOver())
         {
             game.advanceGame(pacManController.getMove(game.copy(),-1),ghostController.getMove(game.copy(),-1));
-            steps++;
-            System.out.println( steps );
 
             try{Thread.sleep(delay);}catch(Exception e){}
 
@@ -150,55 +148,6 @@ public class Executor
      * @param visual Indicates whether or not to use visuals
      */
 
-    public void runGameEvolutionary( Controller<MOVE> pacManController, Controller<EnumMap<GHOST, MOVE>> ghostController)
-    {
-        Game game = null;
-        GameView gv = null;
-        int generationMax = 100;
-        int i = 0;
-        long maxScoreFound = 0;
-        int maxLevelFound = 1;
-        int numSteps = 0;
-
-        LinkedList<MOVE> pathThusFar = new LinkedList<MOVE>();
-
-        while( i < generationMax ){
-            if( game != null ){
-                System.out.println( "Current Score: " + game.getLongScore());
-                System.out.println( "Generation: " + i);
-                System.out.println( "Max Score Found: " + maxScoreFound );
-                System.out.println( "Max Level Found: " + maxLevelFound );
-                System.out.println( "Path Size: " + pathThusFar.size() );
-                System.out.println( "Num Steps: " + numSteps );
-            }
-            game = new Game(0);
-            int j = 0;
-            while( j < 200 ) {
-                if( pathThusFar.size() > 0 ){
-                    pathThusFar.removeLast();
-                }
-                j++;
-            }
-            i++;
-            int moveTracker = 0;
-            numSteps = 0;
-
-            while( !game.wasPacManEaten() ) {
-                while( moveTracker < pathThusFar.size() ){
-                    game.advanceGame( pathThusFar.get( moveTracker ), ghostController.getMove( game.copy(), -1));
-                    if( game.getLongScore() > maxScoreFound){
-                        maxScoreFound = game.getLongScore();
-                        maxLevelFound = game.getCurrentLevel();
-                    }
-                    numSteps++;
-                    moveTracker++;
-                }
-                MOVE nextMove = pacManController.getMove( game.copy(), -1 );
-                pathThusFar.add( nextMove );
-            }
-        }
-    }
-
     public void runGameTimed(Controller<MOVE> pacManController,Controller<EnumMap<GHOST,MOVE>> ghostController,boolean visual)
     {
         Game game=new Game(0);
@@ -209,7 +158,7 @@ public class Executor
             gv=new GameView(game).showGame();
 
         if(pacManController instanceof HumanController)
-            gv.getFrame().addKeyListener(((HumanController)pacManController).getKeyboardInput());
+            gv.getFrame().addKeyListener(((HumanController) pacManController).getKeyboardInput());
 
         new Thread(pacManController).start();
         new Thread(ghostController).start();
