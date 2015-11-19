@@ -1,7 +1,7 @@
 package pacman.controllers.examples;
 
 import pacman.controllers.Controller;
-import pacman.game.Constants;
+import pacman.game.Constants.GHOST;
 import pacman.game.Constants.MOVE;
 import pacman.game.Game;
 
@@ -11,7 +11,7 @@ import java.util.*;
  * Created by Sam on 11/18/2015.
  */
 public class EvolutionStrategy extends Controller<MOVE>{
-    Controller<EnumMap<Constants.GHOST, MOVE>> ghostController;
+    Controller<EnumMap<GHOST, MOVE>> ghostController;
     int m = 3;
     int l = 7;
     int genomeSize = 10;
@@ -19,7 +19,7 @@ public class EvolutionStrategy extends Controller<MOVE>{
     int populationSize = m + l;
     ArrayList<MOVE> moveTypes = new ArrayList<MOVE>();
 
-    public EvolutionStrategy(Controller<EnumMap<Constants.GHOST, MOVE>> ghostController){
+    public EvolutionStrategy(Controller<EnumMap<GHOST, MOVE>> ghostController){
         this.ghostController = ghostController;
         moveTypes.add(MOVE.UP);
         moveTypes.add(MOVE.DOWN);
@@ -78,7 +78,7 @@ public class EvolutionStrategy extends Controller<MOVE>{
         return evoStratMove(game, ghostController);
     }
 
-    public MOVE evoStratMove( Game game, Controller<EnumMap<Constants.GHOST, MOVE>> ghostController )
+    public MOVE evoStratMove( Game game, Controller<EnumMap<GHOST, MOVE>> ghostController )
     {
         HashMap<LinkedList<MOVE>, Integer> fitnessMap = new HashMap<LinkedList<MOVE>, Integer>();
         ArrayList<LinkedList<MOVE>> population = new ArrayList<LinkedList<MOVE>>();
@@ -91,11 +91,27 @@ public class EvolutionStrategy extends Controller<MOVE>{
                 for( MOVE move : genome){
                     copy.advanceGame( move, ghostController.getMove(copy, -1));
                 }
-                fitnessMap.put( genome, copy.getScore() );
+                fitnessMap.put( genome, eval(copy) );
             }
             population = sortByFitness(fitnessMap);
             generationCount++;
         }
         return population.get(0).pollFirst();
+    }
+
+    public int eval(Game game) {
+        GHOST ghosts[] = {GHOST.BLINKY, GHOST.INKY, GHOST.PINKY, GHOST.SUE};
+        int shortestPathDistanceToGhost = 0;
+        for (GHOST ghost : ghosts) {
+            if (!game.isGhostEdible(ghost)) {
+                shortestPathDistanceToGhost = Math.min(
+                        game.getShortestPathDistance(
+                                game.getGhostCurrentNodeIndex(ghost),
+                                game.getPacmanCurrentNodeIndex()),
+                        shortestPathDistanceToGhost
+                );
+            }
+        }
+        return shortestPathDistanceToGhost + game.getScore();
     }
 }
