@@ -45,7 +45,7 @@ public class Executor
         int delay=10;
         boolean visual=true;
         //exec.runGame(new OurAStar( new AggressiveGhosts() ), new AggressiveGhosts(),visual,delay);
-        exec.runGame(new EvolutionStrategy( new AggressiveGhosts() ), new AggressiveGhosts(),visual,delay);
+        exec.runGame(new GeneticAlgorithm( new AggressiveGhosts() ), new AggressiveGhosts(),visual,delay);
 
 
         ///*

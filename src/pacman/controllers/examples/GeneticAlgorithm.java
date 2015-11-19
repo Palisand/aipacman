@@ -7,19 +7,16 @@ import pacman.game.Game;
 
 import java.util.*;
 
-/**
- * Created by Sam on 11/18/2015.
- */
-public class EvolutionStrategy extends Controller<MOVE>{
+public class GeneticAlgorithm extends Controller<MOVE>{
     Controller<EnumMap<Constants.GHOST, MOVE>> ghostController;
     int m = 3;
     int l = 7;
     int genomeSize = 10;
-    int generations = 5;
+    int generations = 7;
     int populationSize = m + l;
     ArrayList<MOVE> moveTypes = new ArrayList<MOVE>();
 
-    public EvolutionStrategy(Controller<EnumMap<Constants.GHOST, MOVE>> ghostController){
+    public GeneticAlgorithm(Controller<EnumMap<Constants.GHOST, MOVE>> ghostController){
         this.ghostController = ghostController;
         moveTypes.add(MOVE.UP);
         moveTypes.add(MOVE.DOWN);
@@ -53,49 +50,63 @@ public class EvolutionStrategy extends Controller<MOVE>{
         return sortedPopulation;
     }
 
-    public void mutate( ArrayList<LinkedList<MOVE>> population){
-        while( population.size() > m ){
-            population.remove( population.size() - 1 );
-        }
-        while( population.size() < populationSize ){
-            LinkedList<MOVE> randomSelection = population.get( (int) (Math.random() * m) );
-            LinkedList<MOVE> mutation = new LinkedList<MOVE>();
-            for( MOVE move : randomSelection ){
-                MOVE newMove;
-                if( (int) (Math.random() * 10) >= 5){
-                    newMove = move.opposite();
-                } else {
-                    newMove = move;
-                }
-                mutation.add( newMove );
+    public void mutate( LinkedList<MOVE> selection){
+        for( MOVE move : selection ){
+            if( (int) (Math.random() * 10) >= 5){
+                move = move.opposite();
             }
-            population.add(mutation);
         }
+    }
+
+    public LinkedList<MOVE> reproduce( LinkedList<MOVE> parentX, LinkedList<MOVE> parentY){
+        int n = parentX.size();
+        int c = (int) ( Math.random() * n);
+        LinkedList<MOVE> child = new LinkedList<MOVE>();
+        for(int i = 0; i < parentX.size(); i++){
+            if( i <= c ){
+                child.add(parentX.get(i));
+            } else {
+                child.add(parentY.get(i));
+            }
+        }
+
+        return child;
     }
 
     public MOVE getMove(Game game, long timeDue)
     {
-        return evoStratMove(game, ghostController);
+        return geneticAlgoMove(game, ghostController);
     }
 
-    public MOVE evoStratMove( Game game, Controller<EnumMap<Constants.GHOST, MOVE>> ghostController )
+    public MOVE geneticAlgoMove( Game game, Controller<EnumMap<Constants.GHOST, MOVE>> ghostController )
     {
         HashMap<LinkedList<MOVE>, Integer> fitnessMap = new HashMap<LinkedList<MOVE>, Integer>();
         ArrayList<LinkedList<MOVE>> population = new ArrayList<LinkedList<MOVE>>();
         fillPopulation(population);
         int generationCount = 0;
-        while( generationCount < generations ){
-            mutate(population);
-            for( LinkedList<MOVE> genome : population ){
-                Game copy = game.copy();
-                for( MOVE move : genome){
-                    copy.advanceGame( move, ghostController.getMove(copy, -1));
+
+        while( generationCount < generations ) {
+            ArrayList<LinkedList<MOVE>> newPopulation = new ArrayList<LinkedList<MOVE>>();
+            for (int i = 0; i < population.size(); i++) {
+                LinkedList<MOVE> parentX = population.get((int) (Math.random() * populationSize));
+                LinkedList<MOVE> parentY = population.get((int) (Math.random() * populationSize));
+                LinkedList<MOVE> child = reproduce(parentX, parentY);
+                if (Math.random() * 100 < 5) {
+                    mutate(child);
                 }
-                fitnessMap.put( genome, copy.getScore() );
+                newPopulation.add(child);
             }
-            population = sortByFitness(fitnessMap);
+            population.addAll(newPopulation);
             generationCount++;
         }
+        for (LinkedList<MOVE> genome : population) {
+            Game copy = game.copy();
+            for (MOVE move : genome) {
+                copy.advanceGame(move, ghostController.getMove(copy, -1));
+            }
+            fitnessMap.put(genome, copy.getScore());
+        }
+        population = sortByFitness(fitnessMap);
         return population.get(0).pollFirst();
     }
 }
