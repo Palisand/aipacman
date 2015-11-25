@@ -7,13 +7,10 @@ import pacman.game.Game;
 
 import java.util.*;
 
-/**
- * Created by Sam on 11/18/2015.
- */
 public class EvolutionStrategy extends Controller<MOVE>{
     Controller<EnumMap<GHOST, MOVE>> ghostController;
-    int m = 3;
-    int l = 7;
+    int m = 3;  // μ
+    int l = 7;  // λ
     int genomeSize = 10;
     int generations = 5;
     int populationSize = m + l;

@@ -40,8 +40,8 @@ public class Executor
         //run a game in synchronous mode: game waits until controllers respond.
         int delay=25;
         boolean visual=true;
-        //exec.runGame(new EvolutionStrategy( new AggressiveGhosts() ), new AggressiveGhosts(),visual,delay);
-        exec.runGameCollectTrainingData(new HumanController(new KeyBoardInput()), new StarterGhosts(), delay, visual);
+        exec.runGame(new kNearestNeighbor( new AggressiveGhosts() ), new AggressiveGhosts(),visual,delay);
+//        exec.runGameCollectTrainingData(new HumanController(new KeyBoardInput()), new AggressiveGhosts(), delay, visual);
         ///*
         //run the game in asynchronous mode.
         //boolean visual=true;
