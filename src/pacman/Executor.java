@@ -1,17 +1,13 @@
 package pacman;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.Random;
 import pacman.controllers.Controller;
 import pacman.controllers.HumanController;
+import pacman.controllers.KeyBoardInput;
 import pacman.controllers.examples.*;
 import pacman.game.Game;
 import pacman.game.GameView;
@@ -38,14 +34,14 @@ public class Executor
 
 
         //run multiple games in batch mode - good for testing.
-        int numTrials=100;
-        exec.runExperiment(new GeneticAlgorithm(new AggressiveGhosts()), new AggressiveGhosts(), numTrials);
+        //int numTrials=100;
+        //exec.runExperiment(new GeneticAlgorithm(new AggressiveGhosts()), new AggressiveGhosts(), numTrials);
 
         //run a game in synchronous mode: game waits until controllers respond.
-        //int delay=10;
-        //boolean visual=true;
-        //exec.runGame(new OurAStar( new AggressiveGhosts() ), new AggressiveGhosts(),visual,delay);
-
+        int delay=25;
+        boolean visual=true;
+        //exec.runGame(new EvolutionStrategy( new AggressiveGhosts() ), new AggressiveGhosts(),visual,delay);
+        exec.runGameCollectTrainingData(new HumanController(new KeyBoardInput()), new StarterGhosts(), delay, visual);
         ///*
         //run the game in asynchronous mode.
         //boolean visual=true;
@@ -134,6 +130,51 @@ public class Executor
 
             if(visual)
                 gv.repaint();
+        }
+    }
+
+    public void runGameCollectTrainingData(Controller<MOVE> pacManController,Controller<EnumMap<GHOST,MOVE>> ghostController, int delay, boolean visual)
+    {
+        BufferedWriter bw = null;
+        try {
+            File trainingFile = new File("myData/kNN_trainer.txt");
+            bw = new BufferedWriter(new FileWriter(trainingFile, true));
+
+            Game game = new Game(0);
+
+            GameView gv = null;
+
+            if (visual) {
+                gv = new GameView(game).showGame();
+                if(pacManController instanceof HumanController)
+                    gv.getFrame().addKeyListener(((HumanController)pacManController).getKeyboardInput());
+            }
+
+            int steps = 0;
+            while (!game.gameOver()) {
+                bw.write(game.getPacmanLastMoveMade().toString());
+                bw.write(',' + game.getNearestGhost(false)); // non-edible
+                bw.write(',' + game.getNearestGhost(true)); // edible
+                bw.write(',' + game.getNearestPill());
+                bw.write(',' + game.getNearestPowerPill());
+                bw.write(',' + String.valueOf(game.getPacmanCurrentNodeIndex()));
+                game.advanceGame(pacManController.getMove(game.copy(), -1), ghostController.getMove(game.copy(), -1));
+                bw.write(',' + game.getPacmanLastMoveMade().toString() + '\n');
+                try {
+                    Thread.sleep(delay);
+                } catch (Exception e) {
+                }
+
+                if (visual)
+                    gv.repaint();
+            }
+        } catch (Exception e) {
+        } finally{
+            try{
+                bw.close();
+            } catch (Exception e){
+
+            }
         }
     }
 
