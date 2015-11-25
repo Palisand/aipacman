@@ -153,10 +153,10 @@ public class Executor
             int steps = 0;
             while (!game.gameOver()) {
                 bw.write(game.getPacmanLastMoveMade().toString());
-                bw.write(',' + game.getNearestGhost(false)); // non-edible
-                bw.write(',' + game.getNearestGhost(true)); // edible
-                bw.write(',' + game.getNearestPill());
-                bw.write(',' + game.getNearestPowerPill());
+                bw.write(',' + String.valueOf(game.getNearestGhostDistance(false))); // non-edible
+                bw.write(',' + String.valueOf(game.getNearestGhostDistance(true))); // edible
+                bw.write(',' + String.valueOf(game.getNearestPillDistance()));
+                bw.write(',' + String.valueOf(game.getNearestPowerPillDistance()));
                 bw.write(',' + String.valueOf(game.getPacmanCurrentNodeIndex()));
                 game.advanceGame(pacManController.getMove(game.copy(), -1), ghostController.getMove(game.copy(), -1));
                 bw.write(',' + game.getPacmanLastMoveMade().toString() + '\n');
