@@ -1679,4 +1679,58 @@ public final class Game
 
 		return caches[mazeIndex].getPathDistanceFromA2B(fromNodeIndex,toNodeIndex,lastMoveMade);
 	}
+
+    /**
+     * Helper functions added by The Good Guys
+     */
+    public int getNearestGhostDistance(boolean edible) {
+        GHOST ghosts[] = {GHOST.BLINKY, GHOST.INKY, GHOST.PINKY, GHOST.SUE};
+        int shortestPathDistanceToGhost = Integer.MAX_VALUE;
+        for (GHOST ghost : ghosts) {
+            if (edible) {
+                if (isGhostEdible(ghost)) {
+                    shortestPathDistanceToGhost = Math.min(
+                            getShortestPathDistance(
+                                    getGhostCurrentNodeIndex(ghost),
+                                    getPacmanCurrentNodeIndex()),
+                            shortestPathDistanceToGhost
+                    );
+                }
+            }
+            else {
+                if (!isGhostEdible(ghost)) {
+                    shortestPathDistanceToGhost = Math.min(
+                            getShortestPathDistance(
+                                    getGhostCurrentNodeIndex(ghost),
+                                    getPacmanCurrentNodeIndex()),
+                            shortestPathDistanceToGhost
+                    );
+                }
+            }
+
+        }
+        return shortestPathDistanceToGhost;
+    }
+
+    public int getNearestPillDistance() {
+        int[] activePills = getActivePillsIndices();
+        int[] targetNodeIndices = new int[activePills.length];
+        for(int i=0;i<activePills.length;i++)
+            targetNodeIndices[i] = activePills[i];
+        int closestPillIndex = getClosestNodeIndexFromNodeIndex(
+                getPacmanCurrentNodeIndex(), targetNodeIndices, DM.PATH);
+        int shortestPathDistanceToPill = getShortestPathDistance(getPacmanCurrentNodeIndex(), closestPillIndex);
+        return shortestPathDistanceToPill;
+    }
+
+    public int getNearestPowerPillDistance() {
+        int[] activePowerPills = getActivePowerPillsIndices();
+        int[] targetNodeIndices = new int[activePowerPills.length];
+        for(int i=0;i<activePowerPills.length;i++)
+            targetNodeIndices[i] = activePowerPills[i];
+        int closestPowerPillIndex = getClosestNodeIndexFromNodeIndex(
+                getPacmanCurrentNodeIndex(), targetNodeIndices, DM.PATH);
+        int shortestPathDistanceToPowerPill = getShortestPathDistance(getPacmanCurrentNodeIndex(), closestPowerPillIndex);
+        return shortestPathDistanceToPowerPill;
+    }
 }

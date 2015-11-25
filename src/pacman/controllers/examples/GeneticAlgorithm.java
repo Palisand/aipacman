@@ -9,11 +9,9 @@ import java.util.*;
 
 public class GeneticAlgorithm extends Controller<MOVE>{
     Controller<EnumMap<GHOST, MOVE>> ghostController;
-    int m = 3;
-    int l = 7;
     int genomeSize = 10;
     int generations = 7;
-    int populationSize = m + l;
+    int populationSize = 10;
     ArrayList<MOVE> moveTypes = new ArrayList<MOVE>();
 
     public GeneticAlgorithm(Controller<EnumMap<GHOST, MOVE>> ghostController){
@@ -51,9 +49,9 @@ public class GeneticAlgorithm extends Controller<MOVE>{
     }
 
     public void mutate( LinkedList<MOVE> selection){
-        for( MOVE move : selection ){
-            if( (int) (Math.random() * 10) >= 5){
-                move = move.opposite();
+        for ( int i = 0; i < selection.size(); i++){
+            if ( (int) (Math.random() * 10) >= 5){
+                selection.set(i, selection.get(i).opposite());
             }
         }
     }
