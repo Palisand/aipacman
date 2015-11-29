@@ -8,15 +8,15 @@ import pacman.game.Game;
 import java.util.*;
 import java.io.*;
 
-public class kNearestNeighbor extends Controller<MOVE> {
+public class KNearestNeighbor extends Controller<MOVE> {
 
     Controller<EnumMap<GHOST, MOVE>> ghostController;
-    int k = 5;
+    int k = 10;
     String delim = ",";
     String trainerFile = "myData/kNN_trainer.txt";
     int distIgnore = 999999;
 
-    public kNearestNeighbor(Controller<EnumMap<GHOST, MOVE>> ghostController){
+    public KNearestNeighbor(Controller<EnumMap<GHOST, MOVE>> ghostController){
         this.ghostController = ghostController;
     }
 
@@ -32,7 +32,7 @@ public class kNearestNeighbor extends Controller<MOVE> {
             BufferedReader trainerReader = getTrainerReader();
             while ((line = trainerReader.readLine()) != null) {
                 data = line.split(delim);
-                MOVE currMove = strtom(data[6]);
+                MOVE currMove = strtom(data[5]);
                 int currDist = (int) getDistance(game, data);
 
                 if (neighbors.size() < k) {
@@ -67,10 +67,8 @@ public class kNearestNeighbor extends Controller<MOVE> {
         double pillDistance = Math.pow(shortestPathDistanceToPill - Integer.parseInt(attrData[3]), 2);
         int shortestPathDistanceToPowerPill = game.getNearestPowerPillDistance();
         double powerPillDistance = Math.pow(shortestPathDistanceToPowerPill - Integer.parseInt(attrData[4]), 2);
-        int shortestPathDistanceToNode = game.getShortestPathDistance(game.getPacmanCurrentNodeIndex(), Integer.parseInt(attrData[5]));
-        double nodeDistance = Math.pow(shortestPathDistanceToNode, 2);
 
-        return Math.sqrt(ghostNonEdibleDistance + ghostEdibleDistance + pillDistance + powerPillDistance + nodeDistance);
+        return Math.sqrt(ghostNonEdibleDistance + ghostEdibleDistance + pillDistance + powerPillDistance);
     }
 
     private BufferedReader getTrainerReader() {

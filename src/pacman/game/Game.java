@@ -1681,7 +1681,7 @@ public final class Game
 	}
 
     /**
-     * Helper functions added by The Good Guys
+     * Helper functions added by 'The Good Guys' Team
      */
     public int getNearestGhostDistance(boolean edible) {
         GHOST ghosts[] = {GHOST.BLINKY, GHOST.INKY, GHOST.PINKY, GHOST.SUE};

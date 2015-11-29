@@ -110,7 +110,7 @@ public class GeneticAlgorithm extends Controller<MOVE>{
 
     public int eval(Game game) {
         GHOST ghosts[] = {GHOST.BLINKY, GHOST.INKY, GHOST.PINKY, GHOST.SUE};
-        int shortestPathDistanceToGhost = 0;
+        int shortestPathDistanceToGhost = Integer.MAX_VALUE;
         for (GHOST ghost : ghosts) {
             if (!game.isGhostEdible(ghost)) {
                 shortestPathDistanceToGhost = Math.min(
