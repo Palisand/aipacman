@@ -3,7 +3,6 @@ package pacman.controllers.examples;
 import pacman.controllers.Controller;
 import pacman.game.Constants.MOVE;
 import pacman.game.Constants.GHOST;
-import pacman.game.Constants.DM;
 import pacman.game.Game;
 
 import java.util.*;
@@ -12,21 +11,17 @@ import java.io.*;
 public class ID3decisionTree extends Controller<MOVE>{
     String examplesFileName = "myData/id3_examples.txt";
     String delim = ",";
-//    ID3node treeTextBook = new ID3node();
-    ID3node upTree = new ID3node();
-    ID3node downTree = new ID3node();
-    ID3node leftTree = new ID3node();
-    ID3node rightTree = new ID3node();
-    ID3node neutralTree = new ID3node();
+    ID3node tree = new ID3node();
     Controller<EnumMap<GHOST, MOVE>> ghostController;
     List<String> attributes = Arrays.asList(
 //            "alternate", "bar", "friday", "hungry", "patrons", "price", "rain", "reservation", "type", "estimate"
-            "at_junction", "move_to_nearest_pill", "move_to_nearest_power_pill", "move_to_nearest_ghost", "move_to_nearest_edible_ghost", "is_ghost_edible"
+            "ghost_is_near", "moved_closer_to_ghost", "moved_closer_to_pill",
+            "moved_closer_to_power_pill", "score_increased", "was_eaten" // refers to nearest objects
     );
     Map<String,List<String>> attrToValues = new HashMap<String,List<String>>();
 
     List<List<String>> examples = new ArrayList<List<String>>();
-    int currentGoalIndex = 6;  // 10 for textbook, start at 6 for actual project
+    int goalIndex = 6;  // 10 for textbook example, 6 for project
 
     public ID3decisionTree(Controller<EnumMap<GHOST, MOVE>> ghostController) {
 //        attrToValues.put("alternate", Arrays.asList("yes", "no"));
@@ -39,12 +34,12 @@ public class ID3decisionTree extends Controller<MOVE>{
 //        attrToValues.put("reservation", Arrays.asList("yes", "no"));
 //        attrToValues.put("type", Arrays.asList("french", "thai", "burger", "italian"));
 //        attrToValues.put("estimate", Arrays.asList("0-10", "10-30", "30-60", ">60"));
-        attrToValues.put("at_junction", Arrays.asList("yes", "no"));
-        attrToValues.put("move_to_nearest_pill", Arrays.asList("UP", "DOWN", "LEFT", "RIGHT", "none"));
-        attrToValues.put("move_to_nearest_power_pill", Arrays.asList("UP", "DOWN", "LEFT", "RIGHT", "none"));
-        attrToValues.put("move_to_nearest_ghost", Arrays.asList("UP", "DOWN", "LEFT", "RIGHT", "none"));
-        attrToValues.put("move_to_nearest_edible_ghost", Arrays.asList("UP", "DOWN", "LEFT", "RIGHT", "none"));
-        attrToValues.put("is_ghost_edible", Arrays.asList("yes", "no"));
+        attrToValues.put("ghost_is_near", Arrays.asList("yes", "no"));
+        attrToValues.put("moved_closer_to_ghost", Arrays.asList("yes", "no"));
+        attrToValues.put("moved_closer_to_pill", Arrays.asList("yes", "no"));
+        attrToValues.put("moved_closer_to_power_pill", Arrays.asList("yes", "no"));
+        attrToValues.put("score_increased", Arrays.asList("yes", "no"));
+        attrToValues.put("was_eaten", Arrays.asList("yes", "no"));
         buildTrees();
         this.ghostController = ghostController;
     }
@@ -55,18 +50,8 @@ public class ID3decisionTree extends Controller<MOVE>{
 
     public void buildTrees() {
         List<List<String>> examples = getExamplesFromFile();
-//        treeTextBook = decisionTreeLearning(examples, attributes, null);
-//        treeTextBook.print();
-//        System.exit(0);
-        upTree = decisionTreeLearning(examples, attributes, null);  // upTree.print();
-        currentGoalIndex++;
-        downTree = decisionTreeLearning(examples, attributes, null);  // downTree.print();
-        currentGoalIndex++;
-        leftTree = decisionTreeLearning(examples, attributes, null);  // leftTree.print();
-        currentGoalIndex++;
-        rightTree = decisionTreeLearning(examples, attributes, null);  // rightTree.print();
-        currentGoalIndex++;
-        neutralTree = decisionTreeLearning(examples, attributes, null);  // neutralTree.print();
+        tree = decisionTreeLearning(examples, attributes, null);
+        tree.print();
     }
 
     public List<List<String>> getExamplesFromFile() {
@@ -99,13 +84,13 @@ public class ID3decisionTree extends Controller<MOVE>{
             return pluralityValue(parentExamples);
         }
         else if (sameClassification(examples)) {
-            return new ID3node(examples.get(0).get(currentGoalIndex));  // since all same, just use first
+            return new ID3node(examples.get(0).get(goalIndex));  // since all same, just use first
         }
         else if (attributes.isEmpty()) {
             return pluralityValue(examples);
         }
         else {
-            String bestAttribute = getBestAttribute(attributes, examples);  // importance
+            String bestAttribute = getBestAttribute(examples);  // importance
             ID3node tree = new ID3node(bestAttribute);
             for (String label : attrToValues.get(bestAttribute)) {
                 List<String> remainingAttributes = new ArrayList<String>(attributes);
@@ -130,12 +115,12 @@ public class ID3decisionTree extends Controller<MOVE>{
         return exs;
     }
 
-    public String getBestAttribute(List<String> attributes, List<List<String>> examples) {
+    public String getBestAttribute(List<List<String>> examples) {
         int p = 0;  // positive examples
         int n = 0;  // negative examples
         for (List<String> example : examples) {
-            if (example.get(currentGoalIndex).equals("yes")) { ++p; }
-            else if (example.get(currentGoalIndex).equals("no")) { ++n; }
+            if (example.get(goalIndex).equals("yes")) { ++p; }
+            else if (example.get(goalIndex).equals("no")) { ++n; }
         }
         double b = boolRandVarEntropy((double) p / (p + n));
         double remainder = 0;
@@ -147,8 +132,8 @@ public class ID3decisionTree extends Controller<MOVE>{
             for(String value : attrToValues.get(attributes.get(i))) {
                 for (List<String> example : examples) {
                     if (example.get(i).equals(value)) {
-                        if (example.get(currentGoalIndex).equals("yes")) { ++p_k; }
-                        else if (example.get(currentGoalIndex).equals("no")) { ++n_k; }
+                        if (example.get(goalIndex).equals("yes")) { ++p_k; }
+                        else if (example.get(goalIndex).equals("no")) { ++n_k; }
                     }
                 }
                 double addToRemainder = ((double) (p_k + n_k) / (p + n)) * boolRandVarEntropy((double) p_k / (p_k + n_k));
@@ -173,9 +158,9 @@ public class ID3decisionTree extends Controller<MOVE>{
     }
 
     public boolean sameClassification(List<List<String>> examples) {
-        String classification = examples.get(0).get(currentGoalIndex);
+        String classification = examples.get(0).get(goalIndex);
         for (List<String> example : examples) {
-            if (!example.get(currentGoalIndex).equals(classification)) {
+            if (!example.get(goalIndex).equals(classification)) {
                 return false;
             }
         }
@@ -186,10 +171,10 @@ public class ID3decisionTree extends Controller<MOVE>{
         int yesCount = 0;
         int noCount = 0;
         for (List<String> example : examples) {
-            if (example.get(currentGoalIndex).equals("yes")) {
+            if (example.get(goalIndex).equals("yes")) {
                 yesCount++;
             }
-            if (example.get(currentGoalIndex).equals("no")) {
+            if (example.get(goalIndex).equals("no")) {
                 noCount++;
             }
         }
@@ -207,27 +192,24 @@ public class ID3decisionTree extends Controller<MOVE>{
     public MOVE id3Move(Game game) {
         MOVE moves[] = {MOVE.UP, MOVE.DOWN, MOVE.LEFT, MOVE.RIGHT, MOVE.NEUTRAL};
         boolean willMove[] = {false, false, false, false, false};
-        MOVE chosenMove = MOVE.NEUTRAL;
-        MOVE[] possibleMoves = game.getPossibleMoves(game.getPacmanCurrentNodeIndex());
+        MOVE[] possibleMoves = game.getPossibleMoves(game.getPacmanCurrentNodeIndex(), game.getPacmanLastMoveMade());
         for(MOVE move : possibleMoves) {
             switch(move) {
                 case UP:
-                    willMove[0] = getGoalOutput(upTree, game, MOVE.UP);
+                    willMove[0] = getGoalOutput(tree, game, MOVE.UP);
                     break;
                 case DOWN:
-                    willMove[1] = getGoalOutput(downTree, game, MOVE.DOWN);
+                    willMove[1] = getGoalOutput(tree, game, MOVE.DOWN);
                     break;
                 case LEFT:
-                    willMove[2] = getGoalOutput(leftTree, game, MOVE.LEFT);
+                    willMove[2] = getGoalOutput(tree, game, MOVE.LEFT);
                     break;
                 case RIGHT:
-                    willMove[3] = getGoalOutput(rightTree, game, MOVE.RIGHT);
-                    break;
-                case NEUTRAL:
-                    willMove[4] = getGoalOutput(neutralTree, game, MOVE.NEUTRAL);
+                    willMove[3] = getGoalOutput(tree, game, MOVE.RIGHT);
                     break;
             }
         }
+        MOVE chosenMove = MOVE.NEUTRAL;
         for (int i = 0; i < moves.length; i++) {
             if (willMove[i]) {
                 chosenMove = moves[i];
@@ -243,45 +225,29 @@ public class ID3decisionTree extends Controller<MOVE>{
         ID3node currNode = tree;
         while (!currNode.children.isEmpty()) {
             switch(currNode.value) {
-                case "at_junction":
-                    String atJunction = copy.isJunction(game.getPacmanCurrentNodeIndex()) ? "yes" : "no";
-                    currNode = getMatchingChild(atJunction, currNode);
+                case "ghost_is_near":
+                    String ghostIsNear = copy.getNearestGhostDistance(false) < 10 ? "yes" : "no";
+                    currNode = getMatchingChild(ghostIsNear, currNode);
                     break;
-                case "move_to_nearest_pill":
-                    String moveToNearestPill = copy.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestPillDistance(), DM.PATH).toString();
-                    currNode = getMatchingChild(moveToNearestPill, currNode);
+                case "moved_closer_to_ghost":
+                    String closerToGhost = copy.getNearestGhostDistance(false) < game.getNearestGhostDistance(false) ? "yes" : "no";
+                    currNode = getMatchingChild(closerToGhost, currNode);
                     break;
-                case "move_to_nearest_power_pill":
-                    String moveToNearestPowerPill = copy.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestPowerPillDistance(), DM.PATH).toString();
-                    currNode = getMatchingChild(moveToNearestPowerPill, currNode);
+                case "moved_closer_to_pill":
+                    String closerToPill = copy.getNearestPillDistance() < game.getNearestPillDistance() ? "yes" : "no";
+                    currNode = getMatchingChild(closerToPill, currNode);
                     break;
-                case "move_to_nearest_ghost":
-                    String moveToNearestGhost;
-                    try {
-                        moveToNearestGhost = copy.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestGhostDistance(false), DM.PATH).toString();
-                    } catch (java.lang.ArrayIndexOutOfBoundsException e) {
-                        moveToNearestGhost = "none";
-                    }
-                    currNode = getMatchingChild(moveToNearestGhost, currNode);
+                case "moved_closer_to_power_pill":
+                    String closerToPowerPill = copy.getNearestPowerPillDistance() < game.getNearestPowerPillDistance() ? "yes" : "no";
+                    currNode = getMatchingChild(closerToPowerPill, currNode);
                     break;
-                case "move_to_nearest_edible_ghost":
-                    String moveToNearestEdibleGhost;
-                    try {
-                        moveToNearestEdibleGhost = copy.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestGhostDistance(true), DM.PATH).toString();
-                    } catch (java.lang.ArrayIndexOutOfBoundsException e) {
-                        moveToNearestEdibleGhost = "none";
-                    }
-                    currNode = getMatchingChild(moveToNearestEdibleGhost, currNode);
+                case "score_increased":
+                    String scoreIncreased = copy.getScore() > game.getScore() ? "yes" : "no";
+                    currNode = getMatchingChild(scoreIncreased, currNode);
                     break;
-                case "is_ghost_edible":
-                    String isGhostEdible = "no";
-                    for (GHOST ghost : Arrays.asList(GHOST.BLINKY, GHOST.INKY, GHOST.PINKY, GHOST.SUE)) {
-                        if (game.isGhostEdible(ghost)) {
-                            isGhostEdible = "yes";
-                            break;
-                        }
-                    }
-                    currNode = getMatchingChild(isGhostEdible, currNode);
+                case "was_eaten":
+                    String wasEaten = copy.wasPacManEaten() ? "yes" : "no";
+                    currNode = getMatchingChild(wasEaten, currNode);
                     break;
                 default:
                     break;
@@ -329,3 +295,36 @@ public class ID3decisionTree extends Controller<MOVE>{
     }
 }
 
+/*
+The following might differ slightly per run due to line 188
+(selecting the most common output value among a set of examples, breaking ties RANDOMLY)
+
+Textbook Tree
+└── null : patrons
+    ├── some : yes
+    ├── full : hungry
+    │   ├── yes : type
+    │   │   ├── french : yes
+    │   │   ├── thai : friday
+    │   │   │   ├── yes : yes
+    │   │   │   └── no : no
+    │   │   ├── burger : yes
+    │   │   └── italian : no
+    │   └── no : no
+    └── none : no
+
+Project Tree
+└── null : was_eaten
+    ├── yes : no
+    └── no : moved_closer_to_ghost
+        ├── yes : ghost_is_near
+        │   ├── yes : no
+        │   └── no : moved_closer_to_pill
+        │       ├── yes : yes
+        │       └── no : moved_closer_to_power_pill
+        │           ├── yes : yes
+        │           └── no : score_increased
+        │               ├── yes : yes
+        │               └── no : no
+        └── no : yes
+ */
