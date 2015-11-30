@@ -132,6 +132,52 @@ public class Executor
         }
     }
 
+    public void runGameCollectTrainingData(Controller<MOVE> pacManController,Controller<EnumMap<GHOST,MOVE>> ghostController, int delay, boolean visual)
+    {
+        BufferedWriter bw = null;
+        try {
+            File trainingFile = new File("myData/kNN_trainer.txt");
+            bw = new BufferedWriter(new FileWriter(trainingFile, true));
+            Game game = new Game(0);
+            GameView gv = null;
+            if (visual) {
+                gv = new GameView(game).showGame();
+                if(pacManController instanceof HumanController)
+                    gv.getFrame().addKeyListener(((HumanController)pacManController).getKeyboardInput());
+            }
+            int steps = 0;
+            while (!game.gameOver()) {
+                bw.write(game.getPacmanLastMoveMade().toString());
+                bw.write(',' + String.valueOf(game.getNearestGhostDistance(false))); // non-edible
+                bw.write(',' + String.valueOf(game.getNearestGhostDistance(true))); // edible
+                bw.write(',' + String.valueOf(game.getNearestPillDistance()));
+                bw.write(',' + String.valueOf(game.getNearestPowerPillDistance()));
+                game.advanceGame(pacManController.getMove(game.copy(), -1), ghostController.getMove(game.copy(), -1));
+                bw.write(',' + game.getPacmanLastMoveMade().toString() + '\n');
+                try {
+                    Thread.sleep(delay);
+                }
+                catch (Exception e) {
+                    System.exit(1);
+                }
+
+                if (visual)
+                    gv.repaint();
+            }
+        }
+        catch (Exception e) {
+            System.exit(1);
+        }
+        finally {
+            try {
+                bw.close();
+            }
+            catch (Exception e){
+                System.exit(1);
+            }
+        }
+    }
+
     /**
      * Run the game with time limit (asynchronous mode). This is how it will be done in the competition. 
      * Can be played with and without visual display of game states.
@@ -242,83 +288,7 @@ public class Executor
         ghostController.terminate();
     }
 
-    public void runGameCollectExamples(Controller<MOVE> pacManController, Controller<EnumMap<GHOST, MOVE>> ghostController, int delay, boolean visual) {
-        BufferedWriter bw = null;
-        try {
-            File examplesFile = new File("myData/id3_examples.txt");
-            bw = new BufferedWriter(new FileWriter(examplesFile, true));
-            Game game = new Game(0);
-            GameView gv = null;
-            if (visual) {
-                gv = new GameView(game).showGame();
-                if(pacManController instanceof HumanController)
-                    gv.getFrame().addKeyListener(((HumanController)pacManController).getKeyboardInput());
-            }
-            int steps = 0;
-            while(!game.gameOver()) {
-                bw.write(game.isJunction(game.getPacmanCurrentNodeIndex()) ? "yes" : "no");  // at_junction
-                bw.write(",");  // move_to_nearest_pill
-                bw.write(game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestPillDistance(), DM.PATH).toString());
-                bw.write(",");  // move_to_nearest_power_pill
-                bw.write(game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestPowerPillDistance(), DM.PATH).toString());
-                bw.write(",");  // move_to_nearest_ghost
-                try {
-                    bw.write(game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestGhostDistance(false), DM.PATH).toString());
-                } catch (java.lang.ArrayIndexOutOfBoundsException e) {
-                    bw.write("none");
-                }
-                bw.write(",");  // move_to_nearest_edible_ghost
-                try {
-                    bw.write(game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestGhostDistance(true), DM.PATH).toString());
-                } catch (java.lang.ArrayIndexOutOfBoundsException e) {
-                    bw.write("none");
-                }
-                bw.write(",");  // is_ghost_edible
-                String isGhostEdible = "no";
-                for (GHOST ghost : Arrays.asList(GHOST.BLINKY, GHOST.INKY, GHOST.PINKY, GHOST.SUE)) {
-                    if (game.isGhostEdible(ghost)) {
-                        isGhostEdible = "yes";
-                        break;
-                    }
-                }
-                bw.write(isGhostEdible);
-                bw.write(",");
-                bw.write(game.getPacmanLastMoveMade() == MOVE.UP ? "yes" : "no");
-                bw.write(",");
-                bw.write(game.getPacmanLastMoveMade() == MOVE.DOWN ? "yes" : "no");
-                bw.write(",");
-                bw.write(game.getPacmanLastMoveMade() == MOVE.LEFT ? "yes" : "no");
-                bw.write(",");
-                bw.write(game.getPacmanLastMoveMade() == MOVE.RIGHT ? "yes" : "no");
-                bw.write(",");
-                bw.write(game.getPacmanLastMoveMade() == MOVE.NEUTRAL ? "yes" : "no");
-                bw.write("\n");
-                game.advanceGame(pacManController.getMove(game.copy(), -1), ghostController.getMove(game.copy(), -1));
-                steps++;
-                try {
-                    Thread.sleep(delay);
-                }
-                catch (Exception e) {
-                    System.exit(1);
-                }
 
-                if (visual)
-                    gv.repaint();
-            }
-        }
-        catch (IOException e) {
-            System.out.println(e);
-            System.exit(1);
-        }
-        finally {
-            try {
-                bw.close();
-            }
-            catch (Exception e) {
-                System.exit(1);
-            }
-        }
-    }
 
     /**
      * Run a game in asynchronous mode and recorded.
