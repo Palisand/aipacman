@@ -1,11 +1,8 @@
 package pacman;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.LinkedList;
-import java.util.Random;
+import java.util.*;
+
 import pacman.controllers.Controller;
 import pacman.controllers.HumanController;
 import pacman.controllers.KeyBoardInput;
@@ -36,13 +33,13 @@ public class Executor
 
         //run multiple games in batch mode - good for testing.
         int numTrials=100;
-        exec.runExperiment(new AlphaBeta(new AggressiveGhosts()), new AggressiveGhosts(), numTrials);
+        exec.runExperiment(new Perceptron(false, new AggressiveGhosts()), new AggressiveGhosts(), numTrials);
 
         //run a game in synchronous mode: game waits until controllers respond.
-        //int delay=25;
+        //int delay=15;
         //boolean visual=true;
-        //exec.runGame(new AlphaBeta( new AggressiveGhosts() ), new AggressiveGhosts(),visual,delay);
-//        exec.runGameCollectTrainingData(new HumanController(new KeyBoardInput()), new AggressiveGhosts(), delay, visual);
+        //exec.runGame(new Perceptron(false, new AggressiveGhosts()), new AggressiveGhosts(), visual, delay);
+        //exec.runGamePerceptronCollect(new OurAStar(new AggressiveGhosts()), new AggressiveGhosts(), delay, visual);
         ///*
         //run the game in asynchronous mode.
         //boolean visual=true;
@@ -112,149 +109,26 @@ public class Executor
      * @param visual Indicates whether or not to use visuals
      * @param delay The delay between time-steps
      */
-    public void runGame(Controller<MOVE> pacManController,Controller<EnumMap<GHOST,MOVE>> ghostController,boolean visual,int delay)
-    {
-        Game game=new Game(0);
+    public void runGame(Controller<MOVE> pacManController,Controller<EnumMap<GHOST,MOVE>> ghostController,boolean visual,int delay) {
+        Game game = new Game(0);
 
-        GameView gv=null;
+        GameView gv = null;
 
-        if(visual)
-            gv=new GameView(game).showGame();
+        if (visual)
+            gv = new GameView(game).showGame();
 
         int steps = 0;
 
-        while(!game.gameOver())
-        {
-            game.advanceGame(pacManController.getMove(game.copy(),-1),ghostController.getMove(game.copy(),-1));
+        while (!game.gameOver()) {
+            game.advanceGame(pacManController.getMove(game.copy(), -1), ghostController.getMove(game.copy(), -1));
 
-            try{Thread.sleep(delay);}catch(Exception e){}
+            try {
+                Thread.sleep(delay);
+            } catch (Exception e) {
+            }
 
-            if(visual)
+            if (visual)
                 gv.repaint();
-        }
-    }
-
-    public void runGameCollectTrainingData(Controller<MOVE> pacManController,Controller<EnumMap<GHOST,MOVE>> ghostController, int delay, boolean visual)
-    {
-        BufferedWriter bw = null;
-        try {
-            File trainingFile = new File("myData/kNN_trainer.txt");
-            bw = new BufferedWriter(new FileWriter(trainingFile, true));
-            Game game = new Game(0);
-            GameView gv = null;
-            if (visual) {
-                gv = new GameView(game).showGame();
-                if(pacManController instanceof HumanController)
-                    gv.getFrame().addKeyListener(((HumanController)pacManController).getKeyboardInput());
-            }
-            int steps = 0;
-            while (!game.gameOver()) {
-                bw.write(game.getPacmanLastMoveMade().toString());
-                bw.write(',' + String.valueOf(game.getNearestGhostDistance(false))); // non-edible
-                bw.write(',' + String.valueOf(game.getNearestGhostDistance(true))); // edible
-                bw.write(',' + String.valueOf(game.getNearestPillDistance()));
-                bw.write(',' + String.valueOf(game.getNearestPowerPillDistance()));
-                game.advanceGame(pacManController.getMove(game.copy(), -1), ghostController.getMove(game.copy(), -1));
-                bw.write(',' + game.getPacmanLastMoveMade().toString() + '\n');
-                try {
-                    Thread.sleep(delay);
-                }
-                catch (Exception e) {
-                    System.exit(1);
-                }
-
-                if (visual)
-                    gv.repaint();
-            }
-        }
-        catch (Exception e) {
-            System.exit(1);
-        }
-        finally {
-            try {
-                bw.close();
-            }
-            catch (Exception e){
-                System.exit(1);
-            }
-        }
-    }
-
-    public void runGameCollectExamples(Controller<MOVE> pacManController, Controller<EnumMap<GHOST, MOVE>> ghostController, int delay, boolean visual) {
-        BufferedWriter bw = null;
-        try {
-            File examplesFile = new File("myData/id3_examples.txt");
-            bw = new BufferedWriter(new FileWriter(examplesFile, true));
-            Game game = new Game(0);
-            GameView gv = null;
-            if (visual) {
-                gv = new GameView(game).showGame();
-                if(pacManController instanceof HumanController)
-                    gv.getFrame().addKeyListener(((HumanController)pacManController).getKeyboardInput());
-            }
-            int steps = 0;
-            while(!game.gameOver()) {
-                bw.write(game.isJunction(game.getPacmanCurrentNodeIndex()) ? "yes" : "no");  // at_junction
-                bw.write(",");  // move_to_nearest_pill
-                bw.write(game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestPillDistance(), DM.PATH).toString());
-                bw.write(",");  // move_to_nearest_power_pill
-                bw.write(game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestPowerPillDistance(), DM.PATH).toString());
-                bw.write(",");  // move_to_nearest_ghost
-                try {
-                    bw.write(game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestGhostDistance(false), DM.PATH).toString());
-                } catch (java.lang.ArrayIndexOutOfBoundsException e) {
-                    bw.write("none");
-                }
-                bw.write(",");  // move_to_nearest_edible_ghost
-                try {
-                    bw.write(game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestGhostDistance(true), DM.PATH).toString());
-                } catch (java.lang.ArrayIndexOutOfBoundsException e) {
-                    bw.write("none");
-                }
-                bw.write(",");  // is_ghost_edible
-                String isGhostEdible = "no";
-                for (GHOST ghost : Arrays.asList(GHOST.BLINKY, GHOST.INKY, GHOST.PINKY, GHOST.SUE)) {
-                    if (game.isGhostEdible(ghost)) {
-                        isGhostEdible = "yes";
-                        break;
-                    }
-                }
-                bw.write(isGhostEdible);
-                bw.write(",");
-                bw.write(game.getPacmanLastMoveMade() == MOVE.UP ? "yes" : "no");
-                bw.write(",");
-                bw.write(game.getPacmanLastMoveMade() == MOVE.DOWN ? "yes" : "no");
-                bw.write(",");
-                bw.write(game.getPacmanLastMoveMade() == MOVE.LEFT ? "yes" : "no");
-                bw.write(",");
-                bw.write(game.getPacmanLastMoveMade() == MOVE.RIGHT ? "yes" : "no");
-                bw.write(",");
-                bw.write(game.getPacmanLastMoveMade() == MOVE.NEUTRAL ? "yes" : "no");
-                bw.write("\n");
-                game.advanceGame(pacManController.getMove(game.copy(), -1), ghostController.getMove(game.copy(), -1));
-                steps++;
-                try {
-                    Thread.sleep(delay);
-                }
-                catch (Exception e) {
-                    System.exit(1);
-                }
-
-                if (visual)
-                    gv.repaint();
-            }
-        }
-        catch (IOException e) {
-            System.out.println(e);
-            System.exit(1);
-        }
-        finally {
-            try {
-                bw.close();
-            }
-            catch (Exception e) {
-                System.exit(1);
-            }
         }
     }
 
@@ -366,6 +240,84 @@ public class Executor
 
         pacManController.terminate();
         ghostController.terminate();
+    }
+
+    public void runGameCollectExamples(Controller<MOVE> pacManController, Controller<EnumMap<GHOST, MOVE>> ghostController, int delay, boolean visual) {
+        BufferedWriter bw = null;
+        try {
+            File examplesFile = new File("myData/id3_examples.txt");
+            bw = new BufferedWriter(new FileWriter(examplesFile, true));
+            Game game = new Game(0);
+            GameView gv = null;
+            if (visual) {
+                gv = new GameView(game).showGame();
+                if(pacManController instanceof HumanController)
+                    gv.getFrame().addKeyListener(((HumanController)pacManController).getKeyboardInput());
+            }
+            int steps = 0;
+            while(!game.gameOver()) {
+                bw.write(game.isJunction(game.getPacmanCurrentNodeIndex()) ? "yes" : "no");  // at_junction
+                bw.write(",");  // move_to_nearest_pill
+                bw.write(game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestPillDistance(), DM.PATH).toString());
+                bw.write(",");  // move_to_nearest_power_pill
+                bw.write(game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestPowerPillDistance(), DM.PATH).toString());
+                bw.write(",");  // move_to_nearest_ghost
+                try {
+                    bw.write(game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestGhostDistance(false), DM.PATH).toString());
+                } catch (java.lang.ArrayIndexOutOfBoundsException e) {
+                    bw.write("none");
+                }
+                bw.write(",");  // move_to_nearest_edible_ghost
+                try {
+                    bw.write(game.getNextMoveTowardsTarget(game.getPacmanCurrentNodeIndex(), game.getNearestGhostDistance(true), DM.PATH).toString());
+                } catch (java.lang.ArrayIndexOutOfBoundsException e) {
+                    bw.write("none");
+                }
+                bw.write(",");  // is_ghost_edible
+                String isGhostEdible = "no";
+                for (GHOST ghost : Arrays.asList(GHOST.BLINKY, GHOST.INKY, GHOST.PINKY, GHOST.SUE)) {
+                    if (game.isGhostEdible(ghost)) {
+                        isGhostEdible = "yes";
+                        break;
+                    }
+                }
+                bw.write(isGhostEdible);
+                bw.write(",");
+                bw.write(game.getPacmanLastMoveMade() == MOVE.UP ? "yes" : "no");
+                bw.write(",");
+                bw.write(game.getPacmanLastMoveMade() == MOVE.DOWN ? "yes" : "no");
+                bw.write(",");
+                bw.write(game.getPacmanLastMoveMade() == MOVE.LEFT ? "yes" : "no");
+                bw.write(",");
+                bw.write(game.getPacmanLastMoveMade() == MOVE.RIGHT ? "yes" : "no");
+                bw.write(",");
+                bw.write(game.getPacmanLastMoveMade() == MOVE.NEUTRAL ? "yes" : "no");
+                bw.write("\n");
+                game.advanceGame(pacManController.getMove(game.copy(), -1), ghostController.getMove(game.copy(), -1));
+                steps++;
+                try {
+                    Thread.sleep(delay);
+                }
+                catch (Exception e) {
+                    System.exit(1);
+                }
+
+                if (visual)
+                    gv.repaint();
+            }
+        }
+        catch (IOException e) {
+            System.out.println(e);
+            System.exit(1);
+        }
+        finally {
+            try {
+                bw.close();
+            }
+            catch (Exception e) {
+                System.exit(1);
+            }
+        }
     }
 
     /**
