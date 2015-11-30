@@ -36,14 +36,13 @@ public class Executor
 
         //run multiple games in batch mode - good for testing.
         int numTrials=100;
-        exec.runExperiment(new ID3decisionTree(new AggressiveGhosts()), new AggressiveGhosts(), numTrials);
+        exec.runExperiment(new AlphaBeta(new AggressiveGhosts()), new AggressiveGhosts(), numTrials);
 
         //run a game in synchronous mode: game waits until controllers respond.
-        int delay=25;
-        boolean visual=true;
-//        exec.runGame(new ID3decisionTree( new AggressiveGhosts() ), new AggressiveGhosts(),visual,delay);
-//        exec.runGameCollectExamples(new OurAStar(new AggressiveGhosts()), new AggressiveGhosts(), delay, visual);
-
+        //int delay=25;
+        //boolean visual=true;
+        //exec.runGame(new AlphaBeta( new AggressiveGhosts() ), new AggressiveGhosts(),visual,delay);
+//        exec.runGameCollectTrainingData(new HumanController(new KeyBoardInput()), new AggressiveGhosts(), delay, visual);
         ///*
         //run the game in asynchronous mode.
         //boolean visual=true;
