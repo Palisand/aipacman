@@ -32,13 +32,13 @@ public class Executor
 
 
         //run multiple games in batch mode - good for testing.
-        int numTrials=100;
-        exec.runExperiment(new Perceptron(false, new AggressiveGhosts()), new AggressiveGhosts(), numTrials);
+        //int numTrials=100;
+        //exec.runExperiment(new Perceptron(false, new AggressiveGhosts()), new AggressiveGhosts(), numTrials);
 
         //run a game in synchronous mode: game waits until controllers respond.
-        //int delay=15;
-        //boolean visual=true;
-        //exec.runGame(new Perceptron(false, new AggressiveGhosts()), new AggressiveGhosts(), visual, delay);
+        int delay=15;
+        boolean visual=true;
+        exec.runGame(new QLearning(new AggressiveGhosts()), new AggressiveGhosts(), visual, delay);
         //exec.runGamePerceptronCollect(new OurAStar(new AggressiveGhosts()), new AggressiveGhosts(), delay, visual);
         ///*
         //run the game in asynchronous mode.
